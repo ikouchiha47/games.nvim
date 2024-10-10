@@ -11,4 +11,5 @@ return {
 
 ### Running
 
-**Hangman** `:Hangman`, duh!!
+- `:Hangman`
+- `:MineSweeper`
