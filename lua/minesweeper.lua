@@ -3,14 +3,15 @@ local MineSweeper = {}
 -- Grid Size and Number of Bombs
 
 MineSweeper.icons = {
-	hidden = "⬜", -- Hidden cell
-	cleared = "⬛", -- Cleared cell
+	active = "⬜", -- Cleared cell
+	hidden = "⬛", -- Hidden cell
 	bomb = "💣", -- Bomb
-	flag = "⚑", -- Flag
+	flag = "⚑⚑", -- Flag
+	cleared = "🟢",
 }
 
 local function totalBombs(size)
-	return math.random(size, size + (size / 2))
+	return math.random(size, size * 2)
 end
 
 function MineSweeper:init(size)
@@ -27,6 +28,8 @@ function MineSweeper:init(size)
 			self.grid[y][x] = { bomb = false, revealed = false, flagged = false }
 		end
 	end
+
+	MineSweeper:plant_bombs()
 end
 
 function MineSweeper:plant_bombs()
@@ -37,9 +40,8 @@ function MineSweeper:plant_bombs()
 
 		if not self.grid[y][x].bomb then
 			self.grid[y][x].bomb = true
+			placed = placed + 1
 		end
-
-		placed = placed + 1
 	end
 end
 
@@ -61,6 +63,33 @@ local function vim_render(opts)
 	vim.api.nvim_buf_set_option(0, "modifiable", false)
 end
 
+function MineSweeper:get_grid_state()
+	local display = ""
+
+	for y = 1, self.size do
+		for x = 1, self.size do
+			local cell = self.grid[y][x]
+
+			if self.cursor.x == x and self.cursor.y == y then
+				display = display .. MineSweeper.icons.active .. " " -- Active cell
+			elseif cell.flagged then
+				display = display .. MineSweeper.icons.flag .. " "
+			elseif not cell.revealed then
+				display = display .. MineSweeper.icons.hidden .. " "
+			elseif cell.bomb then
+				self.game_over = true
+				display = display .. MineSweeper.icons.bomb .. " "
+			else
+				display = display .. MineSweeper.icons.cleared .. " " -- Just an empty space for cleared cells
+			end
+		end
+
+		display = display .. "\n"
+	end
+
+	return display
+end
+
 function MineSweeper:display()
 	if self.game_over then
 		return
@@ -70,33 +99,18 @@ function MineSweeper:display()
 		return
 	end
 
-	local display = ""
+	local display = self:get_grid_state()
 
-	for y = 1, self.size do
-		for x = 1, self.size do
-			local cell = self.grid[y][x]
-
-			if cell.flagged then
-				display = display .. MineSweeper.icons.flag .. " "
-			elseif not cell.revealed then
-				display = display .. MineSweeper.icons.hidden .. " "
-			elseif cell.bomb then
-				self.game_over = true
-				display = display .. MineSweeper.icons.bomb .. " "
-			else
-				display = display .. MineSweeper.icons.cleared .. " "
-			end
-		end
-
-		display = display .. "\n"
+	if self.game_over then
+		vim_render({
+			vim.split(display, "\n"),
+			"Woohoo!! You blew up the house!",
+			"Restart with :MineSweeper",
+		})
+		return
 	end
 
 	vim_render(vim.split(display, "\n"))
-
-	if self.game_over then
-		vim_render({ "", "Woohoo!! You blew up the house!" })
-		return
-	end
 end
 
 function MineSweeper:reveal_cell()
@@ -105,7 +119,7 @@ function MineSweeper:reveal_cell()
 
 	local chosen = self.grid[y][x]
 
-	if chosen.revealed or chosen.flagged then
+	if chosen.revealed then
 		return
 	end
 
@@ -161,14 +175,23 @@ local function remap_keys(buf, keychar, callback)
 	vim.api.nvim_buf_set_keymap(buf, "n", keychar, "", cb)
 end
 
+local function disable_arrows(buf)
+	vim.api.nvim_buf_set_keymap(buf, "n", "<Up>", "<Nop>", { noremap = true, silent = true })
+	vim.api.nvim_buf_set_keymap(buf, "n", "<Down>", "<Nop>", { noremap = true, silent = true })
+	vim.api.nvim_buf_set_keymap(buf, "n", "<Left>", "<Nop>", { noremap = true, silent = true })
+	vim.api.nvim_buf_set_keymap(buf, "n", "<Right>", "<Nop>", { noremap = true, silent = true })
+end
+
 function MineSweeper.setup()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_set_current_buf(buf)
 
-	local size = math.random(10, 20)
+	local size = math.random(4, 10)
 	if size % 2 ~= 0 then
 		size = size + 1 -- Cox odd + odd = even, duh!
 	end
+
+	disable_arrows(buf)
 
 	remap_keys(buf, "h", function()
 		MineSweeper:move_cursor(-1, 0)
@@ -177,18 +200,21 @@ function MineSweeper.setup()
 
 	remap_keys(buf, "j", function()
 		MineSweeper:move_cursor(0, 1)
+		MineSweeper:display()
 	end)
 
 	remap_keys(buf, "k", function()
 		MineSweeper:move_cursor(0, -1)
+		MineSweeper:display()
 	end)
 
 	remap_keys(buf, "l", function()
 		MineSweeper:move_cursor(1, 0)
+		MineSweeper:display()
 	end)
 
 	remap_keys(buf, "<Space>", function()
-		MineSweeper:reveal_cell()
+		MineSweeper:flag_cell()
 		MineSweeper:display()
 	end)
 
@@ -196,7 +222,7 @@ function MineSweeper.setup()
 		if not MineSweeper:has_started() then
 			MineSweeper:start()
 		else
-			MineSweeper:flag_cell()
+			MineSweeper:reveal_cell()
 		end
 
 		MineSweeper:display()
@@ -205,7 +231,6 @@ function MineSweeper.setup()
 	MineSweeper:init(size)
 
 	vim_render({
-		"",
 		"Controls",
 		"Directions: [h|j|k|l]",
 		"Space: To flag a cell",
