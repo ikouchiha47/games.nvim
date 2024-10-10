@@ -71,16 +71,24 @@ function MineSweeper:get_grid_state()
 			local cell = self.grid[y][x]
 
 			if self.cursor.x == x and self.cursor.y == y then
-				display = display .. MineSweeper.icons.active .. " " -- Active cell
-			elseif cell.flagged then
-				display = display .. MineSweeper.icons.flag .. " "
-			elseif not cell.revealed then
-				display = display .. MineSweeper.icons.hidden .. " "
-			elseif cell.bomb then
-				self.game_over = true
-				display = display .. MineSweeper.icons.bomb .. " "
+				if cell.flagged then
+					display = display .. MineSweeper.icons.flag .. " "
+				elseif cell.revealed then
+					display = display .. MineSweeper.icons.cleared .. " "
+				else
+					display = display .. MineSweeper.icons.active .. " "
+				end
 			else
-				display = display .. MineSweeper.icons.cleared .. " " -- Just an empty space for cleared cells
+				if cell.flagged then
+					display = display .. MineSweeper.icons.flag .. " "
+				elseif not cell.revealed then
+					display = display .. MineSweeper.icons.hidden .. " "
+				elseif cell.bomb then
+					self.game_over = true
+					display = display .. MineSweeper.icons.bomb .. " "
+				else
+					display = display .. MineSweeper.icons.cleared .. " "
+				end
 			end
 		end
 
@@ -123,6 +131,7 @@ function MineSweeper:reveal_cell()
 		return
 	end
 
+	chosen.flagged = false
 	chosen.revealed = true
 end
 
