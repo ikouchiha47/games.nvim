@@ -13,3 +13,4 @@ return {
 
 - `:Hangman`
 - `:MineSweeper`
+- `:Pacman`
