@@ -45,9 +45,9 @@ function Pacman:init()
 		lives = 3,
 	}
 
-	self:generate_maze()
-	self:remove_dead_ends()
-	self:copy_maze()
+	-- self:generate_maze()
+	-- self:remove_dead_ends()
+	-- self:copy_maze()
 end
 
 local function in_bounds(nx, ny)
@@ -212,78 +212,93 @@ function Pacman:display_terminal()
 	print(display)
 end
 
-Pacman:init()
-Pacman:display_terminal()
+-- Pacman:init()
+-- Pacman:display_terminal()
 
--- --[[
--- function Pacman:generate_maze()
--- 	-- Everything is a wall
--- 	-- Iteratively and randomly select neighbours, skipping 1
--- 	-- we skip 1, to consider the presence of a wall, otherwize
--- 	-- everything will be EMPTY
---
--- 	for y = 1, GRID_HEIGHT do
--- 		self.game.grid[y] = {}
---
--- 		for x = 1, GRID_WIDTH do
--- 			self.game.grid[y][x] = WALL
--- 		end
--- 	end
---
--- 	local stack = {}
--- 	local startx, starty = 2, 2
---
--- 	self.game.grid[starty][startx] = EMPTY
--- 	table.insert(stack, { starty, startx })
---
--- 	-- run bfs to find all connected walls
--- 	while #stack > 0 do
--- 		local curr = stack[#stack]
--- 		local cy, cx = curr[1], curr[2]
---
--- 		local neighbours = self:get_neighbours(cx, cy)
---
--- 		if #neighbours <= 0 then
--- 			table.remove(stack)
--- 		else
--- 			local selected = neighbours[math.random(#neighbours)]
--- 			local ny, nx = selected[1], selected[2]
---
--- 			self.game.grid[ny][nx] = EMPTY
--- 			-- We also need to connect the (cy, cx) with (ny, nx)
--- 			self.game.grid[(cy + ny) / 2][(cx + nx) / 2] = EMPTY
--- 			table.insert(stack, { ny, nx })
--- 		end
--- 	end
---
--- 	-- fill will pellets and dot
--- 	local empties = {}
---
--- 	for y = 1, GRID_HEIGHT do
--- 		for x = 1, GRID_WIDTH do
--- 			if self.game.grid[y][x] ~= EMPTY then
--- 				goto mark
--- 			end
---
--- 			table.insert(empties, { x, y })
--- 			if math.random() < 0.1 then
--- 				self.game.grid[y][x] = POWER_PELLET
--- 			else
--- 				self.game.grid[y][x] = DOT
--- 			end
---
--- 			::mark::
--- 		end
--- 	end
---
--- 	-- set a random starting point
--- 	-- if #empties > 0 then
--- 	-- 	local random_pos = empties[math.random(#empties)]
--- 	-- 	self.game.pacman.x = random_pos[1]
--- 	-- 	self.game.pacman.y = random_pos[2]
--- 	-- end
--- end
--- ]]
---
+function Pacman:generate_maze_v1()
+	-- Everything is a wall
+	-- Iteratively and randomly select neighbours, skipping 1
+	-- we skip 1, to consider the presence of a wall, otherwize
+	-- everything will be EMPTY
+
+	for y = 1, GRID_HEIGHT do
+		self.game.grid[y] = {}
+
+		for x = 1, GRID_WIDTH do
+			self.game.grid[y][x] = WALL
+		end
+	end
+
+	local stack = {}
+	local startx, starty = 2, 2
+
+	self.game.grid[starty][startx] = EMPTY
+	table.insert(stack, { starty, startx })
+
+	-- run bfs to find all connected walls
+	while #stack > 0 do
+		local curr = stack[#stack]
+		local cy, cx = curr[1], curr[2]
+
+		local neighbours = self:get_neighbours(cx, cy)
+
+		if #neighbours <= 0 then
+			table.remove(stack)
+		else
+			local selected = neighbours[math.random(#neighbours)]
+			local ny, nx = selected[1], selected[2]
+
+			self.game.grid[ny][nx] = EMPTY
+			-- We also need to connect the (cy, cx) with (ny, nx)
+			self.game.grid[(cy + ny) / 2][(cx + nx) / 2] = EMPTY
+			table.insert(stack, { ny, nx })
+		end
+	end
+
+	-- fill will pellets and dot
+	local empties = {}
+
+	for y = 1, GRID_HEIGHT do
+		for x = 1, GRID_WIDTH do
+			if self.game.grid[y][x] ~= EMPTY then
+				goto mark
+			end
+
+			table.insert(empties, { x, y })
+			if math.random() < 0.1 then
+				self.game.grid[y][x] = POWER_PELLET
+			else
+				self.game.grid[y][x] = DOT
+			end
+
+			::mark::
+		end
+	end
+
+	-- set a random starting point
+	-- if #empties > 0 then
+	-- 	local random_pos = empties[math.random(#empties)]
+	-- 	self.game.pacman.x = random_pos[1]
+	-- 	self.game.pacman.y = random_pos[2]
+	-- end
+end
+
+function Pacman:v1()
+	Pacman:init()
+	Pacman:generate_maze_v1()
+	Pacman:display_terminal()
+end
+
+function Pacman:v2()
+	Pacman:init()
+	Pacman:generate_maze()
+	Pacman:remove_dead_ends()
+	Pacman:copy_maze()
+
+	Pacman:display_terminal()
+end
+
+Pacman:v1()
+Pacman:v2()
 
 return Pacman
