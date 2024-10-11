@@ -46,6 +46,14 @@ function Pacman:init()
 		score = 0,
 		lives = 3,
 	}
+
+	for y = 1, GRID_HEIGHT do
+		self.game.grid[y] = {}
+
+		for x = 1, GRID_WIDTH do
+			self.game.grid[y][x] = WALL
+		end
+	end
 end
 
 local function in_bounds(nx, ny)
@@ -67,14 +75,6 @@ function Pacman:get_neighbours(x, y, visited)
 end
 
 function Pacman:connect()
-	for y = 1, GRID_HEIGHT do
-		self.game.grid[y] = {}
-
-		for x = 1, GRID_WIDTH do
-			self.game.grid[y][x] = WALL
-		end
-	end
-
 	local stack = {}
 	local visited = {}
 	local startx, starty = self.game.pacman.x, self.game.pacman.y
@@ -105,6 +105,57 @@ function Pacman:connect()
 	end
 end
 
+function Pacman:check_loop(x, y, directions, size)
+	local success = false
+
+	for i = 1, 4 do
+		for _ = 1, size do
+			local ny, nx = y + directions[i][1], x + directions[i][2]
+			success = in_bounds(nx, ny)
+			if not success then
+				break
+			end
+			y, x = ny, nx
+		end
+		if not success then
+			break
+		end
+	end
+
+	return success
+end
+
+function Pacman:create_loops()
+	local totalAreaPart = math.floor(GRID_WIDTH * GRID_HEIGHT * 0.05)
+	local dirs = { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } }
+
+	local notPath = 0
+
+	for _ = 1, totalAreaPart do
+		local startx, starty = math.random(2, GRID_HEIGHT - 1), math.random(2, GRID_WIDTH - 1)
+		local loopSize = math.random(3, 6)
+
+		local success = Pacman:check_loop(startx, starty, dirs, loopSize)
+
+		if not success then
+			notPath = notPath + 1
+			goto continue
+		end
+
+		local curx, cury = startx, starty
+
+		for i = 1, 4 do
+			for _ = 1, loopSize do
+				self.game.grid[cury][curx] = EMPTY
+				cury, curx = cury + dirs[i][1], curx + dirs[i][2]
+			end
+		end
+		::continue::
+	end
+
+	print("totalAreaPart", totalAreaPart, "noPath", notPath)
+end
+
 function Pacman:display_terminal()
 	local display = ""
 
@@ -123,10 +174,14 @@ function Pacman:display_terminal()
 end
 
 function Pacman:v3()
+	math.randomseed(os.time())
+
 	Pacman:init()
-	Pacman:connect()
+	-- Pacman:connect()
+	Pacman:create_loops()
 	Pacman:display_terminal()
 end
 
 Pacman:v3()
+
 return Pacman

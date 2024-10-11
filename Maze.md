@@ -53,3 +53,10 @@ through the maze without hitting a point where he cannot progress.
 - If a dead end cannot connect to another path, its a wall
 
 **Result** [generation2](./mazes/version2.txt), less fuckall
+
+### Version 3
+
+- First fix, instead of starting from 2, 2, start from pacman.pos(x,y)
+- Step 1, create the first connected path, using skipping by 2
+- Step 2, create loops covering 3, 4 blocks. Select a random point on the grid and consume in batches of 3 and 6
+
