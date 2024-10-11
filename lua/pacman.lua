@@ -11,14 +11,14 @@ local POWER_PELLET = 3
 
 -- Unicode characters for display
 local CHARS = {
-	[EMPTY] = "  ", -- Empty space
+	[EMPTY] = "", -- Empty space
 	-- [WALL] = "\x1b[38;5;240m█\x1b[0m", -- Gray Wall (█)
 	[WALL] = "\x1b[38;5;240m|\x1b[0m", -- Gray Wall (█)
 	[DOT] = "\x1b[38;5;15m·\x1b[0m", -- White Dot (·)
 	[POWER_PELLET] = "\x1b[38;5;226m●\x1b[0m", -- Yellow Power Pellet (●)
 }
 
-CHARS[EMPTY] = CHARS[DOT]
+-- CHARS[EMPTY] = CHARS[DOT]
 
 -- Pacman Colors
 local PACMAN_COLORS = {
@@ -126,7 +126,7 @@ function Pacman:check_loop(x, y, directions, size)
 end
 
 function Pacman:create_loops()
-	local totalAreaPart = math.floor(GRID_WIDTH * GRID_HEIGHT * 0.05)
+	local totalAreaPart = math.floor(GRID_WIDTH * GRID_HEIGHT * 0.005)
 	local dirs = { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } }
 
 	local notPath = 0
@@ -153,7 +153,22 @@ function Pacman:create_loops()
 		::continue::
 	end
 
-	print("totalAreaPart", totalAreaPart, "noPath", notPath)
+	-- print("totalAreaPart", totalAreaPart, "noPath", notPath)
+end
+
+function Pacman:pellete()
+	-- local pacy, pacx = self.game.pacman.
+	for y = 1, GRID_HEIGHT do
+		for x = 1, GRID_WIDTH do
+			if self.game.grid[y][x] == EMPTY then
+				if math.random() < 0.05 then -- 5% chance for power pellets
+					self.game.grid[y][x] = POWER_PELLET
+				else
+					self.game.grid[y][x] = DOT
+				end
+			end
+		end
+	end
 end
 
 function Pacman:display_terminal()
@@ -164,8 +179,10 @@ function Pacman:display_terminal()
 			local char = CHARS[self.game.grid[y][x]]
 			if self.game.pacman.x == x and self.game.pacman.y == y then
 				char = self.game.pacman.symbol
+				display = display .. char .. " "
+			else
+				display = display .. char .. "  "
 			end
-			display = display .. char .. " "
 		end
 		display = display .. "\n"
 	end
@@ -177,8 +194,9 @@ function Pacman:v3()
 	math.randomseed(os.time())
 
 	Pacman:init()
-	-- Pacman:connect()
+	Pacman:connect()
 	Pacman:create_loops()
+	Pacman:pellete()
 	Pacman:display_terminal()
 end
 
