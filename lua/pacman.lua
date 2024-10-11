@@ -1,3 +1,5 @@
+local Renderer = require("vim_renderer")
+
 local Pacman = {}
 
 local GRID_WIDTH = 28
@@ -10,12 +12,18 @@ local DOT = 2
 local POWER_PELLET = 3
 
 -- Unicode characters for display
-local CHARS = {
+local TERM_CHARS = {
 	[EMPTY] = "", -- Empty space
-	-- [WALL] = "\x1b[38;5;240m█\x1b[0m", -- Gray Wall (█)
 	[WALL] = "\x1b[38;5;240m|\x1b[0m", -- Gray Wall (█)
 	[DOT] = "\x1b[38;5;15m·\x1b[0m", -- White Dot (·)
 	[POWER_PELLET] = "\x1b[38;5;226m●\x1b[0m", -- Yellow Power Pellet (●)
+}
+
+local CHARS = {
+	[EMPTY] = "", -- Empty space
+	[WALL] = "|", -- Gray Wall (█)
+	[DOT] = "·", -- White Dot (·)
+	[POWER_PELLET] = "●", -- Yellow Power Pellet (●)
 }
 
 -- CHARS[EMPTY] = CHARS[DOT]
@@ -28,11 +36,20 @@ local PACMAN_COLORS = {
 	"\x1b[38;5;82m", -- Green
 }
 
+-- Other Colors
+local COLORS = {
+	RESET = "\27[0m",
+	BLUE = "\27[34m",
+	YELLOW = "\27[33m",
+	RED = "\27[31m",
+}
+
 -- Game state
 
 function Pacman:init()
-	local color = PACMAN_COLORS[math.random(#PACMAN_COLORS)]
-	local pacman_looks = color .. "🟢" .. "\x1b[0m"
+	-- local color = PACMAN_COLORS[math.random(#PACMAN_COLORS)]
+	-- local pacman_looks = color .. "🟢" .. "\x1b[0m"
+	local pacman_looks = "🟢"
 
 	self.game = {
 		pacman = { x = 14, y = 23, direction = "right", symbol = pacman_looks },
@@ -161,7 +178,7 @@ function Pacman:pellete()
 	for y = 1, GRID_HEIGHT do
 		for x = 1, GRID_WIDTH do
 			if self.game.grid[y][x] == EMPTY then
-				if math.random() < 0.05 then -- 5% chance for power pellets
+				if math.random() < 0.06 then -- 5% chance for power pellets
 					self.game.grid[y][x] = POWER_PELLET
 				else
 					self.game.grid[y][x] = DOT
@@ -171,7 +188,31 @@ function Pacman:pellete()
 	end
 end
 
-function Pacman:display_terminal()
+function Pacman:move(dir)
+	local ny, nx = self.game.pacman.y, self.game.pacman.x
+
+	if dir == "top" then
+		nx = nx - 1
+	elseif dir == "down" then
+		nx = nx + 1
+	elseif dir == "left" then
+		ny = ny - 1
+	elseif dir == "right" then
+		ny = ny + 1
+	end
+
+	if not in_bounds(nx, ny) then
+		return
+	end
+
+	if self.game.grid[ny][nx] == WALL then
+		return
+	end
+
+	self.game.pacman.y, self.game.pacman.x = ny, nx
+end
+
+function Pacman:render()
 	local display = ""
 
 	for x = 1, GRID_WIDTH do
@@ -187,19 +228,58 @@ function Pacman:display_terminal()
 		display = display .. "\n"
 	end
 
-	print(display)
+	return display
 end
 
-function Pacman:v3()
+function Pacman:display_terminal()
+	print(Pacman:render())
+end
+
+function Pacman:display()
+	Renderer.render(vim.split(self:render(), "\n"))
+end
+
+Pacman.setup = function()
+	local buf = vim.api.nvim_create_buf(false, true)
+	local utils = require("utils")
+	vim.api.nvim_set_current_buf(buf)
+
+	utils.disable_arrows(buf)
+
+	utils.remap_keys(buf, "h", function()
+		Pacman:move("left")
+		Pacman:display()
+	end)
+
+	utils.remap_keys(buf, "l", function()
+		Pacman:move("right")
+		Pacman:display()
+	end)
+
+	utils.remap_keys(buf, "j", function()
+		Pacman:move("down")
+		Pacman:display()
+	end)
+
+	utils.remap_keys(buf, "k", function()
+		Pacman:move("top")
+		Pacman:display()
+	end)
+
+	Pacman:create()
+	Pacman:display()
+end
+
+function Pacman:create()
 	math.randomseed(os.time())
 
 	Pacman:init()
 	Pacman:connect()
 	Pacman:create_loops()
 	Pacman:pellete()
-	Pacman:display_terminal()
+	-- Pacman:display_terminal()
 end
 
-Pacman:v3()
+-- Pacman:create()
 
 return Pacman
