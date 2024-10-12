@@ -1,7 +1,7 @@
 local Renderer = {}
 
-Renderer.render = function(opts, move_to_end)
-	vim.api.nvim_buf_set_option(0, "modifiable", true)
+Renderer.render = function(bufr, opts, move_to_end)
+	vim.api.nvim_buf_set_option(bufr, "modifiable", true)
 
 	local lines = {}
 	for _, line in ipairs(opts) do
@@ -14,15 +14,15 @@ Renderer.render = function(opts, move_to_end)
 		end
 	end
 
-	vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
-	vim.api.nvim_buf_set_option(0, "modifiable", false)
+	vim.api.nvim_buf_set_lines(bufr, 0, -1, false, lines)
+	vim.api.nvim_buf_set_option(bufr, "modifiable", false)
 
 	if not move_to_end then
 		return
 	end
 
-	local last_line = vim.api.nvim_buf_line_count(0)
-	vim.api.nvim_win_set_cursor(0, { last_line, 0 })
+	local last_line = vim.api.nvim_buf_line_count(bufr)
+	vim.api.nvim_win_set_cursor(bufr, { last_line, 0 })
 end
 
 return Renderer

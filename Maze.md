@@ -6,6 +6,8 @@
 - [Genetic Stuff](https://www.ijml.org/vol6/602-IT023.pdf)
 - [Cryptic shit](https://iajit.org/portal/PDF/vol.3,no.4/7-Adnan.pdf)
 
+- [Wikipedia](https://en.wikipedia.org/wiki/Maze_generation_algorithm) This is good shit
+
 #### First version
 
 Initial thought process was so:
@@ -30,7 +32,7 @@ So need a path from center as well.
 
 Also `specific design characteristic: no dead ends.` mazes:
 
-__Dead ends__ are sections of the maze where a player can go to a cell but then has no other options for movement.
+*Dead ends* are sections of the maze where a player can go to a cell but then has no other options for movement.
 For example, if Pac-Man moves into a cell with only one adjacent empty cell, it can only return back.
 That would suck.
 
@@ -48,15 +50,16 @@ through the maze without hitting a point where he cannot progress.
 - bottom columns are blank, because we need to create a space for enemies
 - run dfs for rest of the path
 - calculating dead ends or not:
-  - If a cell has only one empty adjacent cell, meaning the entry and exit is same, its a dead end
+  - If a cell has only one empty adjacent cell, meaning the entry and exit is same,
+    its a dead end
   - Check neighbours are also leading to dead end
 - If a dead end cannot connect to another path, its a wall
 
-**Result** [generation2](./mazes/version2.txt), less fuckall
+**Result** [generation2](./mazes/version2.txt), less fuckall, but fuck it anyway
 
 ### Version 3
 
 - First fix, instead of starting from 2, 2, start from pacman.pos(x,y)
 - Step 1, create the first connected path, using skipping by 2
-- Step 2, create loops covering 3, 4 blocks. Select a random point on the grid and consume in batches of 3 and 6
-
+- Step 2, create loops covering 3, 4 blocks. Select a random point on the grid and
+  consume in batches of 3 and 6

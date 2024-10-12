@@ -320,8 +320,25 @@ function Pacman:create()
 
 	Pacman:init()
 	Pacman:create_loops()
-	Pacman:connect()
+	-- Pacman:connect()
 	Pacman:pellete()
 end
+
+function Debug()
+	math.randomseed(os.time())
+
+	Pacman:init()
+	Pacman:create_loops()
+	Pacman:pellete()
+
+	Pacman:display_terminal()
+
+	Pacman:connect()
+	Pacman:pellete()
+
+	Pacman:display_terminal()
+end
+
+Debug()
 
 return Pacman
