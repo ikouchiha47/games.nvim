@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sudoku BILP Solver</title>
-    <script type="module" crossorigin src="/games.nvim/assets/index-CkmQ3XEy.js"></script>
-    <link rel="stylesheet" crossorigin href="/games.nvim/assets/index-bx0xF9P_.css">
+    <script type="module" crossorigin src="/games.nvim/assets/index-d2sMe49V.js"></script>
+    <link rel="stylesheet" crossorigin href="/games.nvim/assets/index-ZCk57RWT.css">
   </head>
   <body>
     <div class="container">
@@ -18,6 +18,24 @@
       <div id="status" class="status">Loading solver…</div>
 
       <div id="grid" class="grid"></div>
+
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <button id="pencil-mode" class="tool-btn" title="Toggle pencil marks">✏️ Pencil</button>
+          <button id="erase" class="tool-btn" title="Erase selected cell">⌫ Erase</button>
+        </div>
+        <div class="numpad">
+          <button data-num="1">1</button>
+          <button data-num="2">2</button>
+          <button data-num="3">3</button>
+          <button data-num="4">4</button>
+          <button data-num="5">5</button>
+          <button data-num="6">6</button>
+          <button data-num="7">7</button>
+          <button data-num="8">8</button>
+          <button data-num="9">9</button>
+        </div>
+      </div>
 
       <div class="controls">
         <button id="generate" disabled>Generate New Puzzle</button>
