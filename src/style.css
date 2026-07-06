@@ -7,7 +7,8 @@
   --border: #cbd5e1;
   --cell-bg: #ffffff;
   --given: #0f172a;
-  --solution: #2563eb;
+  --user: #047857;
+  --solution: #dc2626;
   --accent-bg: #e2e8f0;
 }
 
@@ -58,7 +59,7 @@ h1 {
   border: 3px solid var(--text);
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   aspect-ratio: 1 / 1;
 }
 
@@ -67,23 +68,51 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1rem, 4vw, 1.5rem);
+  font-size: clamp(1.2rem, 5vw, 1.8rem);
   font-weight: 600;
   user-select: none;
+  cursor: pointer;
+  position: relative;
 }
 
-.cell.empty {
-  color: var(--solution);
-  background: #eff6ff;
+.cell:hover {
+  background: #f1f5f9;
 }
 
-.cell.hidden {
-  color: transparent;
-  background: var(--cell-bg);
+.cell.selected {
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2px var(--primary);
 }
 
 .cell.given {
   color: var(--given);
+  background: #f8fafc;
+}
+
+.cell.user {
+  color: var(--user);
+}
+
+.cell.solution {
+  color: var(--solution);
+  background: #fef2f2;
+}
+
+.cell.candidates {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 2px;
+  gap: 0;
+}
+
+.candidate {
+  font-size: clamp(0.35rem, 1.5vw, 0.55rem);
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Thick borders every 3 cells */
@@ -93,6 +122,43 @@ h1 {
 .cell:nth-child(n + 19):nth-child(-n + 27),
 .cell:nth-child(n + 46):nth-child(-n + 54) {
   border-bottom: 2px solid var(--text);
+}
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.toolbar-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.tool-btn {
+  background: var(--accent-bg);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: #cbd5e1;
+}
+
+.tool-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.4rem;
+}
+
+.numpad button {
+  padding: 0.6rem 0;
+  font-size: 1.1rem;
 }
 
 .controls {
@@ -129,4 +195,11 @@ button:disabled {
   gap: 1.5rem;
   font-size: 0.9rem;
   color: #475569;
+}
+
+@media (max-width: 400px) {
+  .numpad button {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+  }
 }
