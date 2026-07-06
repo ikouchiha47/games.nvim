@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.venv/
+.env
+.DS_Store
+vite.log
+nohup.out
+coverage/
+*.log
