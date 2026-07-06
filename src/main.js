@@ -238,7 +238,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 (async () => {
-  await getGlpk();
-  statusEl.textContent = 'Solver ready. Generating first puzzle…';
-  await newPuzzle();
+  try {
+    await getGlpk();
+    statusEl.textContent = 'Solver ready. Generating first puzzle…';
+    await newPuzzle();
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Failed to load solver. Please refresh.';
+    generateBtn.disabled = false;
+  }
 })();
