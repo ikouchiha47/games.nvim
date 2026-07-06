@@ -4,6 +4,7 @@ import { solveBILP, getGlpk } from './bilp.js';
 const gridEl = document.getElementById('grid');
 const statusEl = document.getElementById('status');
 const generateBtn = document.getElementById('generate');
+const restartBtn = document.getElementById('restart');
 const showBtn = document.getElementById('show-solution');
 const hideBtn = document.getElementById('hide-solution');
 const pencilBtn = document.getElementById('pencil-mode');
@@ -17,6 +18,8 @@ let game = null;
 let selected = null; // [r, c]
 let pencilMode = false;
 let solutionVisible = false;
+/** @type {{value:number,candidates:number[]}[][] | null} */
+let savedState = null;
 
 function createEmptyGame() {
   return Array.from({ length: 9 }, () =>
@@ -27,6 +30,28 @@ function createEmptyGame() {
       solution: 0,
     }))
   );
+}
+
+function deepCopyState() {
+  if (!game) return null;
+  return game.map((row) =>
+    row.map((cell) => ({
+      value: cell.value,
+      candidates: Array.from(cell.candidates),
+    }))
+  );
+}
+
+function restoreState(state) {
+  if (!game || !state) return;
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = game[r][c];
+      const saved = state[r][c];
+      cell.value = saved.value;
+      cell.candidates = new Set(saved.candidates);
+    }
+  }
 }
 
 function render() {
@@ -73,17 +98,17 @@ function render() {
 }
 
 function setSelectedValue(num) {
-  if (!game || !selected) return;
+  if (!game || !selected || solutionVisible) return;
   const [r, c] = selected;
   const cell = game[r][c];
   if (cell.given !== 0) return;
 
-  if (solutionVisible) return; // don't edit while solution shown
-
   if (pencilMode) {
     if (cell.candidates.has(num)) cell.candidates.delete(num);
-    else cell.candidates.add(num);
-    cell.value = 0; // candidates and final value are mutually exclusive
+    else {
+      cell.candidates.add(num);
+      cell.value = 0;
+    }
   } else {
     if (cell.value === num) cell.value = 0;
     else {
@@ -95,10 +120,10 @@ function setSelectedValue(num) {
 }
 
 function eraseSelected() {
-  if (!game || !selected) return;
+  if (!game || !selected || solutionVisible) return;
   const [r, c] = selected;
   const cell = game[r][c];
-  if (cell.given !== 0 || solutionVisible) return;
+  if (cell.given !== 0) return;
   cell.value = 0;
   cell.candidates.clear();
   render();
@@ -109,8 +134,27 @@ function togglePencil() {
   pencilBtn.classList.toggle('active', pencilMode);
 }
 
+function clearUserInput() {
+  if (!game) return;
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = game[r][c];
+      if (cell.given === 0) {
+        cell.value = 0;
+        cell.candidates.clear();
+      }
+    }
+  }
+  savedState = null;
+  solutionVisible = false;
+  showBtn.disabled = false;
+  hideBtn.disabled = true;
+  render();
+}
+
 async function newPuzzle() {
   generateBtn.disabled = true;
+  restartBtn.disabled = true;
   showBtn.disabled = true;
   hideBtn.disabled = true;
   statusEl.textContent = 'Generating puzzle…';
@@ -129,13 +173,13 @@ async function newPuzzle() {
   const bilpSolution = await solveBILP(puzzle);
   const ms = (performance.now() - start).toFixed(1);
 
-  // Verify BILP solution matches backtracking solution
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       game[r][c].solution = bilpSolution[r][c];
 
   selected = null;
   solutionVisible = false;
+  savedState = null;
   render();
 
   const clues = puzzle.flat().filter((v) => v !== 0).length;
@@ -144,14 +188,18 @@ async function newPuzzle() {
   statusEl.textContent = 'Ready. Select a cell, then use the numpad or keyboard.';
 
   generateBtn.disabled = false;
+  restartBtn.disabled = false;
   showBtn.disabled = false;
   hideBtn.disabled = true;
 }
 
 // Controls
 generateBtn.addEventListener('click', newPuzzle);
+restartBtn.addEventListener('click', clearUserInput);
 
 showBtn.addEventListener('click', () => {
+  if (!game || solutionVisible) return;
+  savedState = deepCopyState();
   solutionVisible = true;
   render();
   showBtn.disabled = true;
@@ -159,7 +207,10 @@ showBtn.addEventListener('click', () => {
 });
 
 hideBtn.addEventListener('click', () => {
+  if (!game || !solutionVisible) return;
+  restoreState(savedState);
   solutionVisible = false;
+  savedState = null;
   render();
   showBtn.disabled = false;
   hideBtn.disabled = true;
@@ -188,6 +239,6 @@ document.addEventListener('keydown', (e) => {
 
 (async () => {
   await getGlpk();
-  generateBtn.disabled = false;
-  statusEl.textContent = 'Solver ready. Click “Generate New Puzzle”.';
+  statusEl.textContent = 'Solver ready. Generating first puzzle…';
+  await newPuzzle();
 })();
